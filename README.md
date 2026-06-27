@@ -44,6 +44,26 @@ python -m venv .venv
 pip install open-dataflow
 ```
 
+## DeepSeek 在线模式
+
+涉及 DeepSeek 的案例默认采用在线模式，需要在本地环境变量中配置 API Key。API Key 不应写入代码，也不应提交到 GitHub。
+
+```powershell
+$env:DF_API_KEY = "your_deepseek_api_key"
+```
+
+如果你的网络需要代理，可以在本地自行设置，例如：
+
+```powershell
+$env:HTTPS_PROXY = "http://your-proxy-host:port"
+$env:HTTP_PROXY = "http://your-proxy-host:port"
+$env:ALL_PROXY = "http://your-proxy-host:port"
+```
+
+不需要代理的环境不用设置这些变量。
+
+## 运行脚本
+
 如果需要重新抓取公开来源样例语料：
 
 ```powershell
@@ -54,6 +74,12 @@ python scripts/fetch_source_sample_corpus.py
 
 ```powershell
 python scripts/build_training_corpus_v1.py
+```
+
+如果需要运行 9 个 DataFlow 案例实验：
+
+```powershell
+.\scripts\run_dataflow_cases.ps1
 ```
 
 ## 实验流程
@@ -76,3 +102,4 @@ python scripts/build_training_corpus_v1.py
 - 使用 DeepSeek 等模型进行问题多样化生成，但答案事实仍由结构化字段约束。
 - 增加日志解释、IOC 提取、风险排序和处置步骤生成等任务类型。
 - 拆分 train/dev/test，为后续小模型微调实验做准备。
+
