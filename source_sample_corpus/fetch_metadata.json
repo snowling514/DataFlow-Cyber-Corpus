@@ -1,0 +1,32 @@
+{
+  "cisa_catalog_version": "2026.06.18",
+  "cisa_date_released": "2026-06-18T16:00:20.1905Z",
+  "cisa_count": 1623,
+  "selected_cve_ids": [
+    "CVE-2022-0492",
+    "CVE-2025-48595",
+    "CVE-2024-21182",
+    "CVE-2025-34291",
+    "CVE-2008-4250",
+    "CVE-2009-1537",
+    "CVE-2009-3459",
+    "CVE-2010-0249"
+  ],
+  "generated_at": "2026-06-23T02:57:06",
+  "record_count": 10,
+  "record_type_counts": {
+    "vulnerability_text": 8,
+    "dataset_profile": 2
+  },
+  "output_jsonl": "C:\\Users\\Admin\\Documents\\DataFlow\\source_sample_corpus\\sample_cyber_corpus_from_sources.jsonl",
+  "sources": {
+    "nvd_api_docs": "https://nvd.nist.gov/developers/vulnerabilities",
+    "nvd_api": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+    "cisa_kev": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+    "epss_api_docs": "https://www.first.org/epss/api",
+    "epss_api": "https://api.first.org/data/v1/epss",
+    "cvelist_v5": "https://github.com/CVEProject/cvelistV5",
+    "cicids2017": "https://www.unb.ca/cic/datasets/ids-2017.html",
+    "unsw_nb15": "https://research.unsw.edu.au/projects/unsw-nb15-dataset"
+  }
+}

@@ -1,0 +1,5 @@
+{"id": 1, "text": "This vulnerability allows remote attackers to execute code via crafted requests."}
+{"id": 2, "text": "This vulnerability allows remote attackers to execute code via crafted request."}
+{"id": 3, "text": "Firewall logs show repeated inbound scans against SSH service."}
+{"id": 4, "text": "Firewall logs show repeated inbound scans against the SSH service."}
+{"id": 5, "text": "The vendor recommends applying the latest security patch."}

@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-06-23T03:03:38",
+  "source_file": "C:\\Users\\Admin\\Documents\\DataFlow\\source_sample_corpus\\sample_cyber_corpus_from_sources.jsonl",
+  "outputs": {
+    "raw_sources": "C:\\Users\\Admin\\Documents\\DataFlow\\cyber_training_corpus_v1\\cyber_corpus_v1_raw_sources.jsonl",
+    "qa": "C:\\Users\\Admin\\Documents\\DataFlow\\cyber_training_corpus_v1\\cyber_corpus_v1_qa.jsonl",
+    "sft": "C:\\Users\\Admin\\Documents\\DataFlow\\cyber_training_corpus_v1\\cyber_corpus_v1_sft.jsonl",
+    "report": "C:\\Users\\Admin\\Documents\\DataFlow\\cyber_training_corpus_v1\\initial_quality_report.txt"
+  },
+  "counts": {
+    "source_records": 10,
+    "raw_records": 10,
+    "qa_records": 44,
+    "sft_records": 26
+  },
+  "quality": {
+    "raw": {
+      "count": 10,
+      "unique_id_count": 10,
+      "duplicate_id_count": 0,
+      "min_chars": 866,
+      "max_chars": 1656,
+      "avg_chars": 1173.8,
+      "missing_fields": {},
+      "task_type_counts": {
+        "unknown": 10
+      }
+    },
+    "qa": {
+      "count": 44,
+      "unique_id_count": 44,
+      "duplicate_id_count": 0,
+      "min_chars": 59,
+      "max_chars": 807,
+      "avg_chars": 223.39,
+      "missing_fields": {},
+      "task_type_counts": {
+        "vulnerability_summary": 8,
+        "affected_product": 8,
+        "risk_assessment": 8,
+        "mitigation": 8,
+        "weakness_extraction": 8,
+        "dataset_description": 2,
+        "dataset_use": 2
+      }
+    },
+    "sft": {
+      "count": 26,
+      "unique_id_count": 26,
+      "duplicate_id_count": 0,
+      "min_chars": 1189,
+      "max_chars": 3401,
+      "avg_chars": 1948.04,
+      "missing_fields": {},
+      "task_type_counts": {
+        "summarize_vulnerability": 8,
+        "recommend_mitigation": 8,
+        "extract_structured_fields": 8,
+        "dataset_to_training_plan": 2
+      }
+    }
+  }
+}

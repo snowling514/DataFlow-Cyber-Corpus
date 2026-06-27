@@ -1,0 +1,2 @@
+{"id":2,"text":"This vulnerability allows remote attackers to read sensitive files.","word_count":9}
+{"id":3,"text":"The report explains the full attack chain, affected versions, mitigation steps, detection rules, and verification method for defenders.","word_count":18}

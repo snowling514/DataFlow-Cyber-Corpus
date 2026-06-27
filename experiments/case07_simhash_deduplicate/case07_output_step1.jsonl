@@ -1,0 +1,4 @@
+{"id":1,"text":"This vulnerability allows remote attackers to execute code via crafted requests.","dedup_label":1}
+{"id":3,"text":"Firewall logs show repeated inbound scans against SSH service.","dedup_label":1}
+{"id":4,"text":"Firewall logs show repeated inbound scans against the SSH service.","dedup_label":1}
+{"id":5,"text":"The vendor recommends applying the latest security patch.","dedup_label":1}

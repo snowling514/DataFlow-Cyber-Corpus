@@ -1,0 +1,2 @@
+{"id":1,"question":"Explain CVE in one Chinese sentence.","answer":"CVE（通用漏洞与暴露）是一个公开的网络安全漏洞字典，为每个已知的安全问题分配唯一编号，以便于识别、追踪和修复。"}
+{"id":2,"question":"List three quality metrics for cleaning cybersecurity corpora. Answer in Chinese.","answer":"1. **数据完整性**：确保语料中无缺失字段（如时间戳、IP地址、攻击类型标签），避免因数据不完整导致模型误判。  \n2. **噪声过滤率**：通过正则表达式或规则库剔除无关内容（如HTML标签、重复日志、非安全相关文本），降低干扰信息占比。  \n3. **标注一致性**：验证安全事件标签（如“恶意软件”“DDoS攻击”）的标注准确率，确保同类事件标签统一，减少歧义。"}
