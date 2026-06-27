@@ -20,6 +20,8 @@ from dataflow.operators.general_text import (
 )
 from dataflow.utils.storage import FileStorage
 
+from deepseek_utils import deepseek_json, require_api_key, validate_list_payload
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RESULTS = ROOT / "results"
 
@@ -138,50 +140,55 @@ def enrich_processed(path: Path, run_id: str) -> list[dict[str, Any]]:
     return rows
 
 
-def make_qa(processed: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    qa_rows = []
+def synthesize_training_rows(processed: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    require_api_key()
+    qa_rows: list[dict[str, Any]] = []
+    sft_rows: list[dict[str, Any]] = []
+    system_prompt = (
+        "你是网络安全大模型训练语料构建助手。"
+        "请只根据用户提供的文本生成训练样本，不要编造不存在的漏洞编号、分数、厂商或处置信息。"
+        "输出必须是严格 JSON，不要输出 Markdown。"
+    )
     for row in processed:
         rid = row["id"]
-        title = row["title"] or rid
-        hits = "、".join(row["cyber_keyword_hits"]) if row["cyber_keyword_hits"] else "未命中明显安全关键词"
-        text = row["text"]
-        qa_rows.append({
-            "id": f"qa_{rid}_summary",
-            "record_id": rid,
-            "task_type": "ad_hoc_summary",
-            "question": f"这段材料《{title}》主要涉及什么安全问题？",
-            "answer": f"该材料的主要内容是：{text[:360]}。关键词命中：{hits}。",
-        })
-        qa_rows.append({
-            "id": f"qa_{rid}_mitigation",
-            "record_id": rid,
-            "task_type": "ad_hoc_mitigation",
-            "question": f"针对《{title}》中的安全问题，可以如何初步处置？",
-            "answer": "建议先确认受影响资产和版本，核对厂商公告或漏洞编号，评估利用风险，优先应用补丁或缓解措施，并检查相关日志、账号和网络访问痕迹。",
-        })
-    return qa_rows
-
-
-def make_sft(processed: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    sft_rows = []
-    for row in processed:
-        rid = row["id"]
-        sft_rows.append({
-            "id": f"sft_{rid}_extract_and_summarize",
-            "record_id": rid,
-            "task_type": "ad_hoc_extract_and_summarize",
-            "instruction": "请根据输入的网络安全文本，提取关键词并给出简短总结。",
-            "input": row["text"],
-            "output": json.dumps({
-                "title": row["title"],
-                "cyber_related": row["cyber_related"],
-                "keywords": row["cyber_keyword_hits"],
-                "summary": row["text"][:420],
-                "suggested_next_step": "进行来源核验、影响范围确认、修复建议整理和人工抽检。",
-            }, ensure_ascii=False),
-        })
-    return sft_rows
-
+        prompt = {
+            "task": "基于输入网络安全文本生成 QA 和 SFT 训练样本",
+            "requirements": [
+                "生成 3 条中文 QA，覆盖：内容概述、风险/影响、处置建议。",
+                "生成 2 条中文 SFT，覆盖：总结分析、结构化抽取。",
+                "答案必须忠于输入文本；无法确定的信息写'文本未提供'。",
+                "SFT 每条必须包含 instruction、input、output。",
+                "QA 每条必须包含 question、answer。",
+            ],
+            "output_schema": {
+                "qa": [{"task_type": "string", "question": "string", "answer": "string"}],
+                "sft": [{"task_type": "string", "instruction": "string", "input": "string", "output": "string"}],
+            },
+            "record": row,
+        }
+        payload = deepseek_json(system_prompt, json.dumps(prompt, ensure_ascii=False), temperature=0.2)
+        for idx, item in enumerate(validate_list_payload(payload, "qa"), 1):
+            qa_rows.append({
+                "id": f"qa_{rid}_{idx:02d}",
+                "record_id": rid,
+                "task_type": clean_text(item.get("task_type") or "deepseek_qa"),
+                "question": clean_text(item.get("question")),
+                "answer": clean_text(item.get("answer")),
+                "generation_model": "deepseek-chat",
+                "corpus_version": "ad_hoc_deepseek_v1",
+            })
+        for idx, item in enumerate(validate_list_payload(payload, "sft"), 1):
+            sft_rows.append({
+                "id": f"sft_{rid}_{idx:02d}",
+                "record_id": rid,
+                "task_type": clean_text(item.get("task_type") or "deepseek_sft"),
+                "instruction": clean_text(item.get("instruction")),
+                "input": clean_text(item.get("input") or row["text"]),
+                "output": clean_text(item.get("output")),
+                "generation_model": "deepseek-chat",
+                "corpus_version": "ad_hoc_deepseek_v1",
+            })
+    return qa_rows, sft_rows
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Process new cybersecurity text and export results.")
@@ -206,8 +213,7 @@ def main() -> None:
 
     processed_step = run_dataflow(raw_file, cache_dir, args.min_words, args.max_words, args.unique_threshold, args.dedup_bound)
     processed = enrich_processed(processed_step, run_id)
-    qa_rows = make_qa(processed)
-    sft_rows = make_sft(processed)
+    qa_rows, sft_rows = synthesize_training_rows(processed)
 
     processed_file = out_dir / "processed.jsonl"
     qa_file = out_dir / "qa.jsonl"
@@ -223,6 +229,7 @@ def main() -> None:
         "processed_count": len(processed),
         "qa_count": len(qa_rows),
         "sft_count": len(sft_rows),
+        "generation_mode": "deepseek-chat",
         "output_dir": str(out_dir),
         "files": {
             "input": str(raw_file),
@@ -242,3 +249,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -67,6 +67,8 @@ pip install open-dataflow
 
 涉及 DeepSeek 的案例默认采用在线模式，需要在本地环境变量中配置 API Key。API Key 不应写入代码，也不应提交到 GitHub。
 
+当前项目中，凡是 QA/SFT 数据合成、问题多样化生成、答案表达优化等适合由大模型完成的环节，均使用 DeepSeek 在线调用完成。脚本会把公开来源字段或用户输入文本作为约束上下文传给 DeepSeek，并要求模型只依据输入内容生成训练样本；缺失信息应输出“来源未提供”或“文本未提供”，避免补写来源中不存在的事实。
+
 ```powershell
 $env:DF_API_KEY = "your_deepseek_api_key"
 ```
@@ -104,6 +106,8 @@ python scripts/fetch_source_sample_corpus.py
 python scripts/build_training_corpus_v1.py
 ```
 
+运行前需要设置 `DF_API_KEY`，该脚本会调用 DeepSeek 生成 QA 与 SFT 训练样本。
+
 输入：
 
 - `source_sample_corpus/sample_cyber_corpus_from_sources.jsonl`
@@ -115,7 +119,7 @@ python scripts/build_training_corpus_v1.py
 - `cyber_training_corpus_v1/cyber_corpus_v1_sft.jsonl`
 - `cyber_training_corpus_v1/build_metadata.json`
 
-预期结果：生成原始来源、QA 问答和 SFT 指令三类 V1 语料。
+预期结果：生成原始来源、QA 问答和 SFT 指令三类 V1 语料；元数据中会记录 `generation_mode=deepseek-chat`。
 
 ### 6.3 运行 9 个 DataFlow 案例实验
 
@@ -138,6 +142,8 @@ python scripts/build_training_corpus_v1.py
 ```powershell
 python scripts/process_new_content.py
 ```
+
+运行前需要设置 `DF_API_KEY`。该脚本先使用 DataFlow 对新文本进行清洗、过滤和去重，再调用 DeepSeek 基于处理后的文本生成 QA 与 SFT 样本。
 
 支持三种输入方式。
 
@@ -197,7 +203,7 @@ results/<运行时间>/
 - `latest_sft.jsonl`
 - `latest_summary.json`
 
-预期结果：输入新的网络安全文本后，脚本会导出清洗后的记录，并自动生成基础 QA 与 SFT 样本，便于后续人工检查或追加到语料库。
+预期结果：输入新的网络安全文本后，脚本会导出清洗后的记录，并通过 DeepSeek 自动生成 QA 与 SFT 样本，便于后续人工检查或追加到语料库。
 
 ## 7. 新内容处理流程
 
@@ -243,6 +249,7 @@ results/<运行时间>/
 
 - 扩大 CVE 样本数量，覆盖更多 CWE、严重等级和厂商产品。
 - 引入人工抽检，评估事实一致性、答案完整性和幻觉风险。
-- 使用 DeepSeek 等模型进行问题多样化生成，但答案事实仍由结构化字段约束。
+- 持续使用 DeepSeek 进行问题多样化、SFT 合成和答案表达优化，但答案事实仍由结构化字段或输入文本约束。
 - 增加日志解释、IOC 提取、风险排序和处置步骤生成等任务类型。
 - 拆分 train/dev/test，为后续小模型微调实验做准备。
+

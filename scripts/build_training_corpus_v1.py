@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from deepseek_utils import deepseek_json, require_api_key, validate_list_payload
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "source_sample_corpus" / "sample_cyber_corpus_from_sources.jsonl"
 OUT = ROOT / "cyber_training_corpus_v1"
@@ -58,27 +60,6 @@ def cve_context(row: dict[str, Any]) -> str:
     return "\n".join(p for p in parts if not p.endswith(": ") and not p.endswith("/ "))
 
 
-def risk_sentence(row: dict[str, Any]) -> str:
-    nvd = row.get("nvd", {})
-    epss = row.get("epss", {})
-    cisa = row.get("cisa", {})
-    sev = clean_text(nvd.get("cvss_severity")) or "未提供"
-    score = clean_text(nvd.get("cvss_base_score")) or "未提供"
-    epss_score = clean_text(epss.get("epss")) or "未提供"
-    percentile = clean_text(epss.get("percentile")) or "未提供"
-    ransomware = clean_text(cisa.get("knownRansomwareCampaignUse")) or "Unknown"
-    return f"该漏洞已进入 CISA KEV，说明存在已知利用活动；CVSS 严重等级为 {sev}，基础分为 {score}；EPSS 分数为 {epss_score}，百分位为 {percentile}；已知勒索软件活动标记为 {ransomware}。"
-
-
-def repair_sentence(row: dict[str, Any]) -> str:
-    action = clean_text(row.get("cisa", {}).get("requiredAction"))
-    if not action:
-        action = "参考厂商公告和 NVD/CVE 记录，优先进行补丁、缓解配置和日志排查。"
-    due = clean_text(row.get("cisa", {}).get("dueDate"))
-    if due:
-        return f"建议处置：{action} CISA 要求的修复截止日期为 {due}。"
-    return f"建议处置：{action}"
-
 
 def qa(record_id: str, qtype: str, question: str, answer: str, source: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -112,60 +93,64 @@ def source_refs(row: dict[str, Any]) -> dict[str, Any]:
     return refs
 
 
-def build_for_vuln(row: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+
+def build_with_deepseek(row: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    require_api_key()
     rid = row["record_id"]
-    cve = row.get("cve_id", "")
-    title = row.get("title", cve)
-    cisa = row.get("cisa", {})
-    nvd = row.get("nvd", {})
     refs = source_refs(row)
-    desc = clean_text(nvd.get("nvd_description")) or clean_text(cisa.get("shortDescription")) or clean_text(row.get("text"))
-    cwe = ", ".join(nvd.get("cwe") or cisa.get("cwes") or []) or "未提供"
-    vendor = clean_text(cisa.get("vendorProject")) or "未提供"
-    product = clean_text(cisa.get("product")) or "未提供"
-    context = cve_context(row)
+    if row.get("record_type") == "vulnerability_text":
+        context = cve_context(row)
+        qa_count = 5
+        sft_count = 3
+        focus = "漏洞解释、影响产品、风险评估、修复建议、CWE/弱点抽取"
+    else:
+        context = clean_text(row.get("text"))
+        qa_count = 2
+        sft_count = 1
+        focus = "数据集用途说明、为什么不能直接作为问答训练语料、如何转成训练任务"
 
-    qas = [
-        qa(rid, "vulnerability_summary", f"{cve} 是什么漏洞？", f"{cve} 是 {title}。{desc}", refs),
-        qa(rid, "affected_product", f"{cve} 影响哪个厂商或产品？", f"根据 CISA KEV 记录，厂商/项目为 {vendor}，产品为 {product}。", refs),
-        qa(rid, "risk_assessment", f"如何评估 {cve} 的利用风险？", risk_sentence(row), refs),
-        qa(rid, "mitigation", f"{cve} 应该如何处置？", repair_sentence(row), refs),
-        qa(rid, "weakness_extraction", f"从记录中提取 {cve} 的 CWE 或弱点类型。", f"该记录关联的 CWE/弱点类型为：{cwe}。", refs),
-    ]
-
-    sfts = [
-        sft(rid, "summarize_vulnerability", "根据给定漏洞记录，用中文总结漏洞影响。", context, f"{cve} 是 {title}。{desc} {risk_sentence(row)}", refs),
-        sft(rid, "recommend_mitigation", "根据给定漏洞记录，给出处置建议。", context, repair_sentence(row), refs),
-        sft(rid, "extract_structured_fields", "从漏洞记录中抽取 CVE、厂商、产品、严重等级、CWE 和 EPSS。", context, json.dumps({
-            "cve_id": cve,
-            "vendor": vendor,
-            "product": product,
-            "cvss_severity": nvd.get("cvss_severity"),
-            "cvss_base_score": nvd.get("cvss_base_score"),
-            "cwe": nvd.get("cwe") or cisa.get("cwes"),
-            "epss": row.get("epss", {}).get("epss"),
-            "epss_percentile": row.get("epss", {}).get("percentile"),
-            "known_exploited": True,
-        }, ensure_ascii=False), refs),
-    ]
-    return qas, sfts
-
-
-def build_for_dataset(row: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    rid = row["record_id"]
-    title = row.get("title", rid)
-    text = clean_text(row.get("text"))
-    refs = source_refs(row)
-    answer = f"{title} 是网络安全/入侵检测相关数据集资料。{text[:600]}"
-    qas = [
-        qa(rid, "dataset_description", f"{title} 可以用于什么网络安全任务？", answer, refs),
-        qa(rid, "dataset_use", f"为什么 {title} 不能直接等同于问答训练语料？", "这类数据集主要提供流量、特征、标签或数据集说明，更适合入侵检测、流量分类或作为背景知识来源；若要用于大模型训练，通常还需要转写为问答、指令或解释样本。", refs),
-    ]
-    sfts = [
-        sft(rid, "dataset_to_training_plan", "根据数据集说明，说明它在网络安全大模型语料构建中的作用。", text, f"{title} 可作为网络安全数据源或背景知识来源，但不能直接作为最终 SFT 语料。建议先抽取任务、字段、攻击类型和标签，再构造问答、解释、分类或处置建议样本。", refs)
-    ]
-    return qas, sfts
-
+    system_prompt = (
+        "你是网络安全大模型训练语料构建专家。"
+        "你必须严格依据输入来源字段生成 QA 和 SFT 数据，不得编造没有出现在输入中的 CVE、厂商、产品、分数、CWE 或日期。"
+        "如果信息缺失，写'来源未提供'。输出必须是严格 JSON，不要 Markdown。"
+    )
+    user_payload = {
+        "task": "合成网络安全训练语料 V1",
+        "requirements": [
+            f"生成 {qa_count} 条中文 QA，覆盖：{focus}。",
+            f"生成 {sft_count} 条中文 SFT，每条包含 instruction、input、output。",
+            "QA 每条包含 task_type、question、answer。",
+            "SFT 每条包含 task_type、instruction、input、output。",
+            "语言要适合大模型训练，答案清晰、可追溯、不要添加来源中没有的事实。",
+        ],
+        "output_schema": {
+            "qa": [{"task_type": "string", "question": "string", "answer": "string"}],
+            "sft": [{"task_type": "string", "instruction": "string", "input": "string", "output": "string"}],
+        },
+        "source_record": row,
+        "normalized_context": context,
+    }
+    payload = deepseek_json(system_prompt, json.dumps(user_payload, ensure_ascii=False), temperature=0.2)
+    qa_rows = []
+    sft_rows = []
+    for idx, item in enumerate(validate_list_payload(payload, "qa"), 1):
+        qa_rows.append(qa(
+            rid,
+            clean_text(item.get("task_type") or f"deepseek_qa_{idx:02d}"),
+            clean_text(item.get("question")),
+            clean_text(item.get("answer")),
+            refs,
+        ) | {"generation_model": "deepseek-chat"})
+    for idx, item in enumerate(validate_list_payload(payload, "sft"), 1):
+        sft_rows.append(sft(
+            rid,
+            clean_text(item.get("task_type") or f"deepseek_sft_{idx:02d}"),
+            clean_text(item.get("instruction")),
+            clean_text(item.get("input") or context),
+            clean_text(item.get("output")),
+            refs,
+        ) | {"generation_model": "deepseek-chat"})
+    return qa_rows, sft_rows
 
 def quality(rows: list[dict[str, Any]], fields: list[str]) -> dict[str, Any]:
     ids = [r["id"] for r in rows]
@@ -207,10 +192,7 @@ def main() -> None:
             "corpus_version": "V1_raw_sources",
         }
         raw_rows.append(raw)
-        if row.get("record_type") == "vulnerability_text":
-            qas, sfts = build_for_vuln(row)
-        else:
-            qas, sfts = build_for_dataset(row)
+        qas, sfts = build_with_deepseek(row)
         qa_rows.extend(qas)
         sft_rows.extend(sfts)
 
@@ -224,6 +206,7 @@ def main() -> None:
     metadata = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "source_file": str(SOURCE),
+        "generation_mode": "deepseek-chat",
         "outputs": {
             "raw_sources": str(RAW_OUT),
             "qa": str(QA_OUT),
@@ -272,7 +255,7 @@ def main() -> None:
         "",
         "四、构建策略说明",
         "----------------",
-        "本版 V1 训练语料没有让大模型自由生成事实，而是从 CISA KEV、NVD、FIRST EPSS 和 CVEProject cvelistV5 的结构化字段中模板化生成。这样可以降低幻觉风险，并保证问题、答案、指令输出都能追溯到原始来源。",
+        "本版 V1 训练语料使用 DeepSeek 在线合成 QA 与 SFT 样本，但生成过程受到 CISA KEV、NVD、FIRST EPSS 和 CVEProject cvelistV5 的结构化字段约束。脚本要求模型缺失信息写'来源未提供'，以降低幻觉风险，并保证问题、答案、指令输出都能追溯到原始来源。",
         "",
         "五、适用性说明",
         "--------------",
@@ -281,7 +264,7 @@ def main() -> None:
         "六、后续优化方向",
         "----------------",
         "1. 扩大 CVE 数量，例如每类 CWE 或每种严重等级采样 50-100 条。",
-        "2. 引入 DeepSeek 只做语言润色或多样化提问，但答案事实仍必须由结构化字段约束。",
+        "2. 继续使用 DeepSeek 做语言润色、多样化提问和 SFT 合成，但答案事实仍必须由结构化字段约束。",
         "3. 增加人工抽检字段：事实正确性、答案完整性、是否包含幻觉、是否泄露无关信息。",
         "4. 拆分 train/dev/test，并记录随机种子和数据版本。",
         "5. 加入更多任务类型，例如漏洞分类、风险排序、处置步骤生成、日志解释和 IOC 提取。",
@@ -293,3 +276,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
