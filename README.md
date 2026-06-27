@@ -14,11 +14,6 @@
 核心 Python 依赖：
 
 - `open-dataflow`
-- `pandas`
-- `requests`
-- `simhash`
-
-其中 `pandas`、`requests`、`simhash` 会随 `open-dataflow` 及脚本依赖一起安装或被环境使用。
 
 建议使用虚拟环境：
 
@@ -37,8 +32,6 @@ pip install open-dataflow
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
 - `experiments/`：DataFlow 基础案例实验的输入与输出文件。
 - `results/`：用户输入新内容后的处理结果输出目录。仓库仅保留目录占位文件，实际运行产物不提交。
-
-说明：`*.txt` 报告文件和 `results/` 下的运行产物已通过 `.gitignore` 排除，不会提交到仓库。
 
 ## 3. 数据来源
 
@@ -65,23 +58,13 @@ pip install open-dataflow
 
 ## 5. DeepSeek 在线模式
 
-涉及 DeepSeek 的案例默认采用在线模式，需要在本地环境变量中配置 API Key。API Key 不应写入代码，也不应提交到 GitHub。
+涉及 DeepSeek 的案例默认采用在线模式，需要在本地环境变量中配置 API Key。
 
 当前项目中，凡是 QA/SFT 数据合成、问题多样化生成、答案表达优化等适合由大模型完成的环节，均使用 DeepSeek 在线调用完成。脚本会把公开来源字段或用户输入文本作为约束上下文传给 DeepSeek，并要求模型只依据输入内容生成训练样本；缺失信息应输出“来源未提供”或“文本未提供”，避免补写来源中不存在的事实。
 
 ```powershell
 $env:DF_API_KEY = "your_deepseek_api_key"
 ```
-
-如果你的网络需要代理，可以在本地自行设置，例如：
-
-```powershell
-$env:HTTPS_PROXY = "http://your-proxy-host:port"
-$env:HTTP_PROXY = "http://your-proxy-host:port"
-$env:ALL_PROXY = "http://your-proxy-host:port"
-```
-
-不需要代理的环境不用设置这些变量。
 
 ## 6. 脚本启动方式
 
