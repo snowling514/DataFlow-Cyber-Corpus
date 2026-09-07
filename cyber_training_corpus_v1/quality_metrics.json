@@ -1,7 +1,16 @@
 {
-  "generated_at": "2026-09-07T11:17:36",
+  "generated_at": "2026-09-07T11:27:24",
+  "config_file": "config/pipeline_config.json",
   "corpus_dir": "cyber_training_corpus_v1",
   "schema_dir": "schemas",
+  "quality_gate": {
+    "min_schema_valid_ratio": 1.0,
+    "min_required_complete_ratio": 1.0,
+    "min_cybersecurity_coverage_ratio": 0.8,
+    "min_source_reference_ratio": 0.8,
+    "min_chars": 20,
+    "max_chars": 4000
+  },
   "files": {
     "raw_sources": "cyber_training_corpus_v1/cyber_corpus_v1_raw_sources.jsonl",
     "qa": "cyber_training_corpus_v1/cyber_corpus_v1_qa.jsonl",
@@ -44,7 +53,9 @@
         "max_chars": 1656,
         "avg_chars": 1173.8,
         "too_short_count": 0,
-        "too_long_count": 0
+        "too_long_count": 0,
+        "min_chars_threshold": 20,
+        "max_chars_threshold": 4000
       },
       "task_type_counts": {
         "unknown": 10
@@ -64,10 +75,13 @@
           "vulnerability": 8,
           "mitigation": 8,
           "attack": 8,
+          "port": 3,
           "privilege": 2,
           "authentication": 1,
           "cvss": 1,
-          "remote code execution": 1
+          "remote code execution": 1,
+          "credential": 1,
+          "payload": 1
         }
       }
     },
@@ -108,7 +122,9 @@
         "max_chars": 807,
         "avg_chars": 223.39,
         "too_short_count": 0,
-        "too_long_count": 0
+        "too_long_count": 0,
+        "min_chars_threshold": 20,
+        "max_chars_threshold": 4000
       },
       "task_type_counts": {
         "vulnerability_summary": 8,
@@ -140,9 +156,12 @@
           "exploit": 6,
           "attack": 6,
           "privilege": 2,
+          "port": 2,
           "rce": 2,
           "authentication": 1,
-          "remote code execution": 1
+          "remote code execution": 1,
+          "credential": 1,
+          "payload": 1
         }
       },
       "record_links": {
@@ -191,7 +210,9 @@
         "max_chars": 3401,
         "avg_chars": 1948.04,
         "too_short_count": 0,
-        "too_long_count": 0
+        "too_long_count": 0,
+        "min_chars_threshold": 20,
+        "max_chars_threshold": 4000
       },
       "task_type_counts": {
         "summarize_vulnerability": 8,
@@ -221,9 +242,12 @@
           "处置": 10,
           "修复": 8,
           "privilege": 6,
+          "port": 5,
           "authentication": 3,
           "remote code execution": 3,
-          "攻击": 2
+          "credential": 3,
+          "攻击": 2,
+          "payload": 1
         }
       },
       "record_links": {

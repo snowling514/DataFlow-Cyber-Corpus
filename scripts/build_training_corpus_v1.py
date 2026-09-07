@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from collections import Counter
@@ -7,17 +8,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from config_utils import load_config, project_path, repo_path
 from deepseek_utils import deepseek_json, require_api_key, validate_list_payload
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "source_sample_corpus" / "sample_cyber_corpus_from_sources.jsonl"
-OUT = ROOT / "cyber_training_corpus_v1"
-OUT.mkdir(parents=True, exist_ok=True)
-RAW_OUT = OUT / "cyber_corpus_v1_raw_sources.jsonl"
-QA_OUT = OUT / "cyber_corpus_v1_qa.jsonl"
-SFT_OUT = OUT / "cyber_corpus_v1_sft.jsonl"
-REPORT_OUT = OUT / "initial_quality_report.txt"
-METADATA_OUT = OUT / "build_metadata.json"
+DEFAULT_SOURCE = ROOT / "source_sample_corpus" / "sample_cyber_corpus_from_sources.jsonl"
+DEFAULT_OUT = ROOT / "cyber_training_corpus_v1"
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -175,7 +171,24 @@ def quality(rows: list[dict[str, Any]], fields: list[str]) -> dict[str, Any]:
 
 
 def main() -> None:
-    source_rows = load_jsonl(SOURCE)
+    parser = argparse.ArgumentParser(description="Build cybersecurity QA/SFT corpus V1 with DeepSeek.")
+    parser.add_argument("--config", help="流水线配置文件，默认 config/pipeline_config.json。")
+    parser.add_argument("--source", help="来源样例语料 JSONL，默认读取配置中的 corpus.source_file。")
+    parser.add_argument("--output-dir", help="输出目录，默认读取配置中的 corpus.default_dir。")
+    args = parser.parse_args()
+
+    config = load_config(args.config)
+    files = config["corpus"]["files"]
+    source_path = project_path(args.source or config["corpus"].get("source_file", DEFAULT_SOURCE))
+    out_dir = project_path(args.output_dir or config["corpus"].get("default_dir", DEFAULT_OUT))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    raw_out = out_dir / files["raw_sources"]
+    qa_out = out_dir / files["qa"]
+    sft_out = out_dir / files["sft"]
+    report_out = out_dir / "initial_quality_report.txt"
+    metadata_out = out_dir / "build_metadata.json"
+
+    source_rows = load_jsonl(source_path)
     raw_rows = []
     qa_rows = []
     sft_rows = []
@@ -196,22 +209,23 @@ def main() -> None:
         qa_rows.extend(qas)
         sft_rows.extend(sfts)
 
-    write_jsonl(RAW_OUT, raw_rows)
-    write_jsonl(QA_OUT, qa_rows)
-    write_jsonl(SFT_OUT, sft_rows)
+    write_jsonl(raw_out, raw_rows)
+    write_jsonl(qa_out, qa_rows)
+    write_jsonl(sft_out, sft_rows)
 
     qa_q = quality(qa_rows, ["question", "answer"])
     sft_q = quality(sft_rows, ["instruction", "input", "output"])
     raw_q = quality([{"id": r["record_id"], **r} for r in raw_rows], ["title", "text"])
     metadata = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "source_file": str(SOURCE),
+        "source_file": repo_path(source_path),
+        "config_file": repo_path(config["_config_path"]),
         "generation_mode": "deepseek-chat",
         "outputs": {
-            "raw_sources": str(RAW_OUT),
-            "qa": str(QA_OUT),
-            "sft": str(SFT_OUT),
-            "report": str(REPORT_OUT),
+            "raw_sources": repo_path(raw_out),
+            "qa": repo_path(qa_out),
+            "sft": repo_path(sft_out),
+            "report": repo_path(report_out),
         },
         "counts": {
             "source_records": len(source_rows),
@@ -221,21 +235,21 @@ def main() -> None:
         },
         "quality": {"raw": raw_q, "qa": qa_q, "sft": sft_q},
     }
-    METADATA_OUT.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+    metadata_out.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
 
     lines = [
         "网络安全训练语料 V1 初步质量报告",
         "================================",
         "",
         f"生成时间：{metadata['generated_at']}",
-        f"来源文件：{SOURCE}",
+        f"来源文件：{repo_path(source_path)}",
         "",
         "一、产出文件",
         "------------",
-        f"1. 原始来源语料：{RAW_OUT}",
-        f"2. 问答语料：{QA_OUT}",
-        f"3. SFT 指令语料：{SFT_OUT}",
-        f"4. 构建元数据：{METADATA_OUT}",
+        f"1. 原始来源语料：{repo_path(raw_out)}",
+        f"2. 问答语料：{repo_path(qa_out)}",
+        f"3. SFT 指令语料：{repo_path(sft_out)}",
+        f"4. 构建元数据：{repo_path(metadata_out)}",
         "",
         "二、样本数量",
         "------------",
@@ -270,7 +284,7 @@ def main() -> None:
         "5. 加入更多任务类型，例如漏洞分类、风险排序、处置步骤生成、日志解释和 IOC 提取。",
         "",
     ]
-    REPORT_OUT.write_text("\n".join(lines), encoding="utf-8")
+    report_out.write_text("\n".join(lines), encoding="utf-8")
     print(json.dumps(metadata, ensure_ascii=False, indent=2))
 
 

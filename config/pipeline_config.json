@@ -1,0 +1,72 @@
+{
+  "config_version": "1.0",
+  "corpus": {
+    "default_dir": "cyber_training_corpus_v1",
+    "source_file": "source_sample_corpus/sample_cyber_corpus_from_sources.jsonl",
+    "files": {
+      "raw_sources": "cyber_corpus_v1_raw_sources.jsonl",
+      "qa": "cyber_corpus_v1_qa.jsonl",
+      "sft": "cyber_corpus_v1_sft.jsonl",
+      "quality_metrics": "quality_metrics.json"
+    }
+  },
+  "schemas": {
+    "dir": "schemas",
+    "files": {
+      "raw_sources": "cyber_raw_source.schema.json",
+      "qa": "cyber_qa.schema.json",
+      "sft": "cyber_sft.schema.json"
+    }
+  },
+  "processing_defaults": {
+    "min_words": 3,
+    "max_words": 400,
+    "unique_threshold": 0.2,
+    "dedup_bound": 0.08
+  },
+  "quality_gate": {
+    "min_schema_valid_ratio": 1.0,
+    "min_required_complete_ratio": 1.0,
+    "min_cybersecurity_coverage_ratio": 0.8,
+    "min_source_reference_ratio": 0.8,
+    "min_chars": 20,
+    "max_chars": 4000
+  },
+  "cyber_terms": [
+    "cve",
+    "cwe",
+    "cvss",
+    "epss",
+    "vulnerability",
+    "exploit",
+    "attack",
+    "ransomware",
+    "malware",
+    "phishing",
+    "xss",
+    "sql injection",
+    "rce",
+    "remote code execution",
+    "privilege",
+    "authentication",
+    "patch",
+    "mitigation",
+    "incident",
+    "threat",
+    "ioc",
+    "indicator",
+    "port",
+    "payload",
+    "credential",
+    "webshell",
+    "漏洞",
+    "攻击",
+    "风险",
+    "修复",
+    "补丁",
+    "处置",
+    "提权",
+    "日志",
+    "凭据"
+  ]
+}

@@ -44,6 +44,7 @@ python scripts/check_environment.py
 
 - `scripts/`：可复现实验脚本，包括基础案例实验、环境检查、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
 - `requirements.txt`：项目核心 Python 依赖清单。
+- `config/`：流水线配置文件，集中管理语料文件名、schema 路径、清洗阈值、质量门禁和领域关键词。
 - `schemas/`：语料字段规范，分别约束来源记录、QA 样本和 SFT 指令格式样本。
 - `source_sample_corpus/`：从公开网络安全数据源汇总得到的样例来源语料。
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
@@ -73,7 +74,19 @@ python scripts/check_environment.py
 
 当前 V1 样本规模较小，主要用于验证 DataFlow 流水线和语料构建流程，不适合作为完整模型训练数据集。
 
-## 5. DeepSeek 在线模式
+## 5. 流水线配置
+
+默认配置文件为 `config/pipeline_config.json`，其中包含：
+
+- `corpus.files`：V1 语料输入输出文件名。
+- `schemas.files`：raw、QA、SFT 三类语料对应的 schema 文件。
+- `processing_defaults`：新内容处理脚本默认使用的词数、唯一词比例和 SimHash 去重阈值。
+- `quality_gate`：质量评估脚本使用的 schema、字段完整性、来源追溯和领域覆盖率门禁。
+- `cyber_terms`：网络安全领域关键词，用于新内容标注和语料质量覆盖率统计。
+
+`build_training_corpus_v1.py`、`process_new_content.py` 和 `evaluate_training_corpus.py` 均支持通过 `--config` 指定其他配置文件，便于对比不同输出目录、清洗阈值或质量门禁。
+
+## 6. DeepSeek 在线模式
 
 涉及 DeepSeek 的案例默认采用在线模式，需要在本地环境变量中配置 API Key。
 
@@ -83,9 +96,9 @@ python scripts/check_environment.py
 $env:DF_API_KEY = "your_deepseek_api_key"
 ```
 
-## 6. 脚本启动方式
+## 7. 脚本启动方式
 
-### 6.1 抓取公开来源样例语料
+### 7.1 抓取公开来源样例语料
 
 ```powershell
 python scripts/fetch_source_sample_corpus.py
@@ -100,11 +113,13 @@ python scripts/fetch_source_sample_corpus.py
 
 预期结果：生成包含漏洞记录和数据集说明记录的样例来源语料。
 
-### 6.2 构建 V1 QA/SFT 指令格式语料
+### 7.2 构建 V1 QA/SFT 指令格式语料
 
 ```powershell
 python scripts/build_training_corpus_v1.py
 ```
+
+可选：使用 `--config config/pipeline_config.json` 指定语料文件名和输出目录配置。
 
 运行前需要设置 `DF_API_KEY`，该脚本会调用 DeepSeek 生成 QA 与 SFT 训练样本。
 
@@ -121,7 +136,7 @@ python scripts/build_training_corpus_v1.py
 
 预期结果：生成原始来源、QA 问答和 SFT 指令三类 V1 语料；元数据中会记录 `generation_mode=deepseek-chat`。
 
-### 6.3 运行 9 个 DataFlow 案例实验
+### 7.3 运行 9 个 DataFlow 案例实验
 
 ```powershell
 .\scripts\run_dataflow_cases.ps1
@@ -135,13 +150,15 @@ python scripts/build_training_corpus_v1.py
 
 预期结果：依次展示清洗、过滤、去重、DeepSeek 生成等 DataFlow 案例。
 
-### 6.4 输入新内容并导出处理结果
+### 7.4 输入新内容并导出处理结果
 
 脚本：
 
 ```powershell
 python scripts/process_new_content.py
 ```
+
+可选：使用 `--config config/pipeline_config.json` 指定流水线配置。
 
 运行前需要设置 `DF_API_KEY`。该脚本先使用 DataFlow 对新文本进行清洗、过滤和去重，再调用 DeepSeek 基于处理后的文本生成 QA 与 SFT 样本。
 
@@ -206,11 +223,13 @@ results/<运行时间>/
 预期结果：输入新的网络安全文本后，脚本会导出清洗后的记录，并通过 DeepSeek 自动生成 QA 与 SFT 样本，便于后续人工检查或追加到语料库。
 
 
-### 6.5 评估 V1 QA/SFT 语料质量
+### 7.5 评估 V1 QA/SFT 语料质量
 
 ```powershell
 python scripts/evaluate_training_corpus.py
 ```
+
+可选：使用 `--config config/pipeline_config.json` 指定质量门禁配置。
 
 输入：
 
@@ -224,7 +243,7 @@ python scripts/evaluate_training_corpus.py
 
 预期结果：生成字段完整性、schema 类型校验、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
 
-## 7. 新内容处理流程
+## 8. 新内容处理流程
 
 `process_new_content.py` 的内部流程如下：
 
@@ -242,7 +261,7 @@ python scripts/evaluate_training_corpus.py
   -> 导出 processed / QA / SFT / summary
 ```
 
-## 8. 实验流程
+## 9. 实验流程
 
 整体流程如下：
 
@@ -256,7 +275,7 @@ python scripts/evaluate_training_corpus.py
   -> 流水线指标复核与迭代优化
 ```
 
-## 9. 预期结果
+## 10. 预期结果
 
 完成环境配置并运行脚本后，预期可以得到：
 
@@ -266,7 +285,7 @@ python scripts/evaluate_training_corpus.py
 4. 针对用户新输入文本的处理结果。
 5. 可复现的 DataFlow 清洗、过滤、去重和质量评估流程。
 
-## 10. 后续方向
+## 11. 后续方向
 
 - 扩大 CVE 样本数量，覆盖更多 CWE、严重等级和厂商产品。
 - 引入人工抽检，评估事实一致性、答案完整性和幻觉风险。

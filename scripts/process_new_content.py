@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import json
@@ -20,6 +20,7 @@ from dataflow.operators.general_text import (
 )
 from dataflow.utils.storage import FileStorage
 
+from config_utils import load_config
 from deepseek_utils import deepseek_json, require_api_key, validate_list_payload
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,9 +99,9 @@ def normalize_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return normalized
 
 
-def keyword_hits(text: str) -> list[str]:
+def keyword_hits(text: str, terms: list[str]) -> list[str]:
     lower = text.lower()
-    return sorted({kw for kw in CYBER_KEYWORDS if kw.lower() in lower})
+    return sorted({kw for kw in terms if kw.lower() in lower})
 
 
 def run_dataflow(raw_file: Path, cache_dir: Path, min_words: int, max_words: int, unique_threshold: float, dedup_bound: float) -> Path:
@@ -119,12 +120,12 @@ def run_dataflow(raw_file: Path, cache_dir: Path, min_words: int, max_words: int
     return cache_dir / "processed_step6.jsonl"
 
 
-def enrich_processed(path: Path, run_id: str) -> list[dict[str, Any]]:
+def enrich_processed(path: Path, run_id: str, terms: list[str]) -> list[dict[str, Any]]:
     df = pd.read_json(path, lines=True)
     rows = []
     for _, row in df.iterrows():
         text = clean_text(row.get("text"))
-        hits = keyword_hits(text)
+        hits = keyword_hits(text, terms)
         rows.append({
             "run_id": run_id,
             "id": clean_text(row.get("id")),
@@ -191,16 +192,24 @@ def synthesize_training_rows(processed: list[dict[str, Any]]) -> tuple[list[dict
     return qa_rows, sft_rows
 
 def main() -> None:
+    pre_parser = argparse.ArgumentParser(add_help=False)
+    pre_parser.add_argument("--config", help=argparse.SUPPRESS)
+    pre_args, _ = pre_parser.parse_known_args()
+    config = load_config(pre_args.config)
+    defaults = config.get("processing_defaults", {})
+
     parser = argparse.ArgumentParser(description="Process new cybersecurity text and export results.")
+    parser.add_argument("--config", default=pre_args.config, help="流水线配置文件，默认 config/pipeline_config.json。")
     parser.add_argument("--text", help="直接输入一段需要处理的文本。")
     parser.add_argument("--input-file", help="输入文件，支持 .txt/.json/.jsonl。")
     parser.add_argument("--title", help="手动输入文本的标题。")
     parser.add_argument("--output-dir", default=str(DEFAULT_RESULTS), help="结果输出目录，默认 results。")
-    parser.add_argument("--min-words", type=int, default=3, help="最小词数过滤阈值。")
-    parser.add_argument("--max-words", type=int, default=400, help="最大词数过滤阈值。")
-    parser.add_argument("--unique-threshold", type=float, default=0.20, help="唯一词比例过滤阈值。")
-    parser.add_argument("--dedup-bound", type=float, default=0.08, help="SimHash 去重阈值。")
+    parser.add_argument("--min-words", type=int, default=defaults.get("min_words", 3), help="最小词数过滤阈值。")
+    parser.add_argument("--max-words", type=int, default=defaults.get("max_words", 400), help="最大词数过滤阈值。")
+    parser.add_argument("--unique-threshold", type=float, default=defaults.get("unique_threshold", 0.20), help="唯一词比例过滤阈值。")
+    parser.add_argument("--dedup-bound", type=float, default=defaults.get("dedup_bound", 0.08), help="SimHash 去重阈值。")
     args = parser.parse_args()
+    cyber_terms = config.get("cyber_terms", CYBER_KEYWORDS)
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_dir = Path(args.output_dir) / run_id
@@ -212,7 +221,7 @@ def main() -> None:
     write_jsonl(raw_file, raw_records)
 
     processed_step = run_dataflow(raw_file, cache_dir, args.min_words, args.max_words, args.unique_threshold, args.dedup_bound)
-    processed = enrich_processed(processed_step, run_id)
+    processed = enrich_processed(processed_step, run_id, cyber_terms)
     qa_rows, sft_rows = synthesize_training_rows(processed)
 
     processed_file = out_dir / "processed.jsonl"
@@ -230,6 +239,7 @@ def main() -> None:
         "qa_count": len(qa_rows),
         "sft_count": len(sft_rows),
         "generation_mode": "deepseek-chat",
+        "config_file": str(config.get("_config_path")),
         "output_dir": str(out_dir),
         "files": {
             "input": str(raw_file),
