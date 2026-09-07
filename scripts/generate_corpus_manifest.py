@@ -21,6 +21,7 @@ DEFAULT_SCRIPT_FILES = [
     "scripts/deepseek_utils.py",
 ]
 SUPPORT_FILES = [
+    "DATA_CARD.md",
     "README.md",
     "requirements.txt",
 ]

@@ -50,6 +50,7 @@ python scripts/check_environment.py
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
 - `experiments/`：DataFlow 基础案例实验的输入与输出文件。
 - `results/`：用户输入新内容后的处理结果输出目录。仓库仅保留目录占位文件，实际运行产物不提交。
+- `DATA_CARD.md`：V1 语料的数据说明卡，说明来源、文件组成、质量检查、适用场景和限制。
 
 ## 3. 数据来源
 
@@ -63,6 +64,8 @@ python scripts/check_environment.py
 - UNSW-NB15 数据集说明
 
 其中，NVD、CISA KEV、EPSS 和 cvelistV5 主要用于构建漏洞知识来源；CICIDS2017 和 UNSW-NB15 作为入侵检测/流量数据集说明型语料加入。
+
+更完整的数据说明见 `DATA_CARD.md`。
 
 ## 4. 语料格式
 

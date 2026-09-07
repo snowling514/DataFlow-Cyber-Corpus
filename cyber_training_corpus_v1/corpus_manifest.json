@@ -1,9 +1,9 @@
 {
   "manifest_version": "1.0",
-  "generated_at": "2026-09-07T11:45:32",
+  "generated_at": "2026-09-07T11:48:12",
   "config_file": "config/pipeline_config.json",
   "project_root_name": "DataFlow",
-  "file_count": 20,
+  "file_count": 21,
   "missing_count": 0,
   "missing_files": [],
   "files": [
@@ -131,9 +131,9 @@
       "path": "scripts/generate_corpus_manifest.py",
       "role": "script",
       "exists": true,
-      "bytes": 4122,
-      "line_count": 106,
-      "sha256": "c24ab6acc6cac10db20e00d24fdb30f513516b9f7d2dfbe858d25ca65724e72f"
+      "bytes": 4142,
+      "line_count": 107,
+      "sha256": "58371b43460dacdc66ca9c9558ae14d2fbf5917f8731dad339874603919eac84"
     },
     {
       "path": "scripts/config_utils.py",
@@ -152,12 +152,20 @@
       "sha256": "80a7ab69ba1be7f5eb3c3e9516ed332a69c87da2aab12a8f3f9b8c3b2fc2c5b0"
     },
     {
+      "path": "DATA_CARD.md",
+      "role": "support",
+      "exists": true,
+      "bytes": 4625,
+      "line_count": 135,
+      "sha256": "cb6f87110f724d179f18131907a57cf8cad8fca9b754901c078daa02536ef850"
+    },
+    {
       "path": "README.md",
       "role": "support",
       "exists": true,
-      "bytes": 11417,
-      "line_count": 322,
-      "sha256": "654842924c9b5baea87fb8f00588ef7bb5de956c7c545b1f57f45d78189ac732"
+      "bytes": 11582,
+      "line_count": 325,
+      "sha256": "6c739abe303f52bba27695c528fb3b660bb871aafe214b48404ef1db942d8996"
     },
     {
       "path": "requirements.txt",
