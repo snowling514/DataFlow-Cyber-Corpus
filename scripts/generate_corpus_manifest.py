@@ -15,6 +15,7 @@ DEFAULT_SCRIPT_FILES = [
     "scripts/build_training_corpus_v1.py",
     "scripts/process_new_content.py",
     "scripts/evaluate_training_corpus.py",
+    "scripts/export_quality_report.py",
     "scripts/run_project_checks.py",
     "scripts/generate_corpus_manifest.py",
     "scripts/config_utils.py",
@@ -67,7 +68,7 @@ def build_manifest(config: dict[str, Any]) -> dict[str, Any]:
     append_existing(records, [project_path(config["_config_path"])], "config")
     append_existing(records, [project_path(config["corpus"]["source_file"])], "source_sample")
     append_existing(records, [corpus_dir / corpus_files["raw_sources"], corpus_dir / corpus_files["qa"], corpus_dir / corpus_files["sft"]], "corpus_v1")
-    append_existing(records, [corpus_dir / corpus_files["quality_metrics"], corpus_dir / "build_metadata.json"], "metrics")
+    append_existing(records, [corpus_dir / corpus_files["quality_metrics"], corpus_dir / corpus_files.get("quality_report", "quality_report.md"), corpus_dir / "build_metadata.json"], "metrics")
     append_existing(records, [schema_dir / name for name in config["schemas"]["files"].values()], "schema")
     append_existing(records, [project_path(path) for path in DEFAULT_SCRIPT_FILES], "script")
     append_existing(records, [project_path(path) for path in SUPPORT_FILES], "support")

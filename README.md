@@ -74,6 +74,7 @@ python scripts/check_environment.py
 - `cyber_corpus_v1_raw_sources.jsonl`：保留公开来源字段和原始摘要，便于追溯；对应 `schemas/cyber_raw_source.schema.json`。
 - `cyber_corpus_v1_qa.jsonl`：问答格式样本，适合问答训练或检索问答评估；对应 `schemas/cyber_qa.schema.json`。
 - `cyber_corpus_v1_sft.jsonl`：SFT 指令格式样本，包含 `instruction`、`input`、`output` 字段；对应 `schemas/cyber_sft.schema.json`。
+- `quality_report.md`：由质量指标自动导出的中文评估报告，便于结题展示和人工复核。
 
 当前 V1 样本规模较小，主要用于验证 DataFlow 流水线和语料构建流程，不适合作为完整模型训练数据集。
 
@@ -247,7 +248,24 @@ python scripts/evaluate_training_corpus.py
 预期结果：生成字段完整性、schema 类型校验、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
 
 
-### 7.6 生成语料 manifest
+### 7.6 导出中文质量评估报告
+
+```powershell
+python scripts/export_quality_report.py
+```
+
+输入：
+
+- `cyber_training_corpus_v1/quality_metrics.json`
+
+输出：
+
+- `cyber_training_corpus_v1/quality_report.md`
+
+预期结果：将 JSON 质量指标转换为可阅读的中文 Markdown 报告，展示样本规模、schema 有效率、字段完整率、领域覆盖率、来源追溯和门禁结论。
+
+
+### 7.7 生成语料 manifest
 
 ```powershell
 python scripts/generate_corpus_manifest.py
@@ -261,15 +279,15 @@ python scripts/generate_corpus_manifest.py
 
 预期结果：生成包含文件路径、用途、大小、行数和 SHA256 哈希的语料交付清单，便于后续复核 V1 语料对应的配置和脚本版本。
 
-### 7.7 运行项目级验收检查
+### 7.8 运行项目级验收检查
 
 ```powershell
 python scripts/run_project_checks.py
 ```
 
-输入：无需额外输入，脚本会读取默认配置、schema、manifest 和 V1 语料文件。
+输入：无需额外输入，脚本会读取默认配置、schema、质量报告、manifest 和 V1 语料文件。
 
-输出：终端输出依赖、JSON、schema、Python 编译、语料质量门禁、manifest 一致性、敏感信息扫描和项目口径扫描结果。
+输出：终端输出依赖、JSON、schema、Python 编译、语料质量门禁、质量报告一致性、manifest 一致性、敏感信息扫描和项目口径扫描结果。
 
 预期结果：所有本地可复现检查通过，并显示 `All project checks passed.`。该脚本不调用 DeepSeek，不需要设置 `DF_API_KEY`。
 

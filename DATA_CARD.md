@@ -31,6 +31,7 @@ DataFlow 网络安全语料 V1。
 - `cyber_corpus_v1_qa.jsonl`：QA 问答格式样本。
 - `cyber_corpus_v1_sft.jsonl`：SFT 指令格式样本。
 - `quality_metrics.json`：语料质量评估结果。
+- `quality_report.md`：由质量指标自动导出的中文质量评估报告。
 - `corpus_manifest.json`：可复现交付清单，记录关键文件的大小、行数和 SHA256 哈希。
 - `build_metadata.json`：语料构建过程元数据。
 

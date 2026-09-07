@@ -29,6 +29,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from check_environment import REQUIRED_PACKAGES, package_status  # noqa: E402
 from config_utils import load_config, project_path, repo_path  # noqa: E402
 from evaluate_training_corpus import build_metrics  # noqa: E402
+from export_quality_report import build_report  # noqa: E402
 from generate_corpus_manifest import build_manifest  # noqa: E402
 
 
@@ -144,6 +145,19 @@ def check_manifest(config: dict[str, Any]) -> dict[str, Any]:
     return {"path": repo_path(manifest_path), "status": "ok", "file_count": stored.get("file_count")}
 
 
+def check_quality_report(config: dict[str, Any]) -> dict[str, Any]:
+    corpus_dir = project_path(config["corpus"]["default_dir"])
+    files = config["corpus"]["files"]
+    metrics_path = corpus_dir / files["quality_metrics"]
+    report_path = corpus_dir / files.get("quality_report", "quality_report.md")
+    stored = report_path.read_text(encoding="utf-8")
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    expected = build_report(metrics)
+    if stored != expected:
+        raise RuntimeError("Quality report is stale. Run: python scripts/export_quality_report.py")
+    return {"path": repo_path(report_path), "status": "ok"}
+
+
 def main() -> None:
     print("Project checks for DataFlow cybersecurity corpus")
 
@@ -176,6 +190,10 @@ def main() -> None:
     print(json.dumps(metrics["summary"], ensure_ascii=False, indent=2))
     if metrics["summary"]["hard_failure_count"]:
         raise RuntimeError("Corpus quality gate failed.")
+
+    print_step("Quality Report")
+    quality_report_result = check_quality_report(config)
+    print(f"{quality_report_result['path']}: {quality_report_result['status']}")
 
     print_step("Corpus Manifest")
     manifest_result = check_manifest(config)

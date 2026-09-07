@@ -8,6 +8,7 @@
       "qa": "cyber_corpus_v1_qa.jsonl",
       "sft": "cyber_corpus_v1_sft.jsonl",
       "quality_metrics": "quality_metrics.json",
+      "quality_report": "quality_report.md",
       "manifest": "corpus_manifest.json"
     }
   },
