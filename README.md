@@ -42,7 +42,7 @@ python scripts/check_environment.py
 
 ## 2. 仓库内容
 
-- `scripts/`：可复现实验脚本，包括基础案例实验、环境检查、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
+- `scripts/`：可复现实验脚本，包括基础案例实验、环境检查、公开数据源抓取、语料 V1 构建、新内容处理、质量评估和项目级验收等。
 - `requirements.txt`：项目核心 Python 依赖清单。
 - `config/`：流水线配置文件，集中管理语料文件名、schema 路径、清洗阈值、质量门禁和领域关键词。
 - `schemas/`：语料字段规范，分别约束来源记录、QA 样本和 SFT 指令格式样本。
@@ -243,6 +243,19 @@ python scripts/evaluate_training_corpus.py
 
 预期结果：生成字段完整性、schema 类型校验、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
 
+
+### 7.6 运行项目级验收检查
+
+```powershell
+python scripts/run_project_checks.py
+```
+
+输入：无需额外输入，脚本会读取默认配置、schema 和 V1 语料文件。
+
+输出：终端输出依赖、JSON、schema、Python 编译、语料质量门禁、敏感信息扫描和项目口径扫描结果。
+
+预期结果：所有本地可复现检查通过，并显示 `All project checks passed.`。该脚本不调用 DeepSeek，不需要设置 `DF_API_KEY`。
+
 ## 8. 新内容处理流程
 
 `process_new_content.py` 的内部流程如下：
@@ -283,7 +296,7 @@ python scripts/evaluate_training_corpus.py
 2. QA 问答格式训练样本。
 3. SFT 指令格式训练样本。
 4. 针对用户新输入文本的处理结果。
-5. 可复现的 DataFlow 清洗、过滤、去重和质量评估流程。
+5. 可复现的 DataFlow 清洗、过滤、去重、质量评估和项目验收流程。
 
 ## 11. 后续方向
 
