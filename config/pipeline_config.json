@@ -7,7 +7,8 @@
       "raw_sources": "cyber_corpus_v1_raw_sources.jsonl",
       "qa": "cyber_corpus_v1_qa.jsonl",
       "sft": "cyber_corpus_v1_sft.jsonl",
-      "quality_metrics": "quality_metrics.json"
+      "quality_metrics": "quality_metrics.json",
+      "manifest": "corpus_manifest.json"
     }
   },
   "schemas": {

@@ -1,0 +1,171 @@
+{
+  "manifest_version": "1.0",
+  "generated_at": "2026-09-07T11:45:32",
+  "config_file": "config/pipeline_config.json",
+  "project_root_name": "DataFlow",
+  "file_count": 20,
+  "missing_count": 0,
+  "missing_files": [],
+  "files": [
+    {
+      "path": "config/pipeline_config.json",
+      "role": "config",
+      "exists": true,
+      "bytes": 1600,
+      "line_count": 73,
+      "sha256": "27e1b1e2bb606b4e78ae9fa4774cbe5040e443d9203f3d433671c92e67849f11"
+    },
+    {
+      "path": "source_sample_corpus/sample_cyber_corpus_from_sources.jsonl",
+      "role": "source_sample",
+      "exists": true,
+      "bytes": 40664,
+      "line_count": 10,
+      "sha256": "5fe7bc9e4f630743988c705d4ceaa478738cf5c784d5d6e7fd745e1139e1c414"
+    },
+    {
+      "path": "cyber_training_corpus_v1/cyber_corpus_v1_raw_sources.jsonl",
+      "role": "corpus_v1",
+      "exists": true,
+      "bytes": 17539,
+      "line_count": 10,
+      "sha256": "857aa2ac21380aaa2c3210058af5a21cfd94686f8dbfc8619e678eedf2e0d605"
+    },
+    {
+      "path": "cyber_training_corpus_v1/cyber_corpus_v1_qa.jsonl",
+      "role": "corpus_v1",
+      "exists": true,
+      "bytes": 36196,
+      "line_count": 44,
+      "sha256": "927f112f7f2bb0f7ca20f4c56c3080d9c4ce3aad347496af3d0ae511f844a544"
+    },
+    {
+      "path": "cyber_training_corpus_v1/cyber_corpus_v1_sft.jsonl",
+      "role": "corpus_v1",
+      "exists": true,
+      "bytes": 68192,
+      "line_count": 26,
+      "sha256": "b2e5c73698ee5e17fcf4f37f00c731cb96de8ab6b3c83a110ed895dcc037d708"
+    },
+    {
+      "path": "cyber_training_corpus_v1/quality_metrics.json",
+      "role": "metrics",
+      "exists": true,
+      "bytes": 7256,
+      "line_count": 269,
+      "sha256": "fab976d0c4541a4204d95f8828bdcdf3e7801c78d4b9fc87577a5d0040bf4490"
+    },
+    {
+      "path": "cyber_training_corpus_v1/build_metadata.json",
+      "role": "metrics",
+      "exists": true,
+      "bytes": 1917,
+      "line_count": 63,
+      "sha256": "dea825291f18a060e82f530d16b700f06fdd872a485680f4cbe57557e167c180"
+    },
+    {
+      "path": "schemas/cyber_raw_source.schema.json",
+      "role": "schema",
+      "exists": true,
+      "bytes": 1163,
+      "line_count": 16,
+      "sha256": "58371f7d4bd67b23aca342d6630350af7613c735793afe19f239dec8d01e1aff"
+    },
+    {
+      "path": "schemas/cyber_qa.schema.json",
+      "role": "schema",
+      "exists": true,
+      "bytes": 970,
+      "line_count": 15,
+      "sha256": "35dcee9c8b1cefd2a34c8984483e327becaf412ac00f7e1d1c86386c912f85c5"
+    },
+    {
+      "path": "schemas/cyber_sft.schema.json",
+      "role": "schema",
+      "exists": true,
+      "bytes": 1083,
+      "line_count": 16,
+      "sha256": "a7f1e759c0a9deea9a2081233216ca741be4ae03dc3541c1ebbb78e5f34f95ab"
+    },
+    {
+      "path": "scripts/fetch_source_sample_corpus.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 13006,
+      "line_count": 333,
+      "sha256": "814ca66eb24b075f382c232ef1f6cf098d4c44d2bbccdafb8cb2dd94093ebe60"
+    },
+    {
+      "path": "scripts/build_training_corpus_v1.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 13187,
+      "line_count": 293,
+      "sha256": "87d1d42b1e136d9b39678ad61015eeafa3764d8a52d406df702b7ef606a04343"
+    },
+    {
+      "path": "scripts/process_new_content.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 11983,
+      "line_count": 262,
+      "sha256": "222ce5e3e062beca92e1130285ce6b56474f0b0fc88122a75c55781a7ced415c"
+    },
+    {
+      "path": "scripts/evaluate_training_corpus.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 12555,
+      "line_count": 296,
+      "sha256": "62cc6e78d860723139b460b8fa00936c49104a54edd7e9e006dee65ca4ef108b"
+    },
+    {
+      "path": "scripts/run_project_checks.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 7899,
+      "line_count": 198,
+      "sha256": "08af73ff877ae4b3190104e514c4c4c5b073aec2d175de53981ed121939d4ac9"
+    },
+    {
+      "path": "scripts/generate_corpus_manifest.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 4122,
+      "line_count": 106,
+      "sha256": "c24ab6acc6cac10db20e00d24fdb30f513516b9f7d2dfbe858d25ca65724e72f"
+    },
+    {
+      "path": "scripts/config_utils.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 802,
+      "line_count": 29,
+      "sha256": "509c7b98946e60f5ab9ecc3dfb992a1664fa99155a611d69a833787bfbb4e880"
+    },
+    {
+      "path": "scripts/deepseek_utils.py",
+      "role": "script",
+      "exists": true,
+      "bytes": 3341,
+      "line_count": 93,
+      "sha256": "80a7ab69ba1be7f5eb3c3e9516ed332a69c87da2aab12a8f3f9b8c3b2fc2c5b0"
+    },
+    {
+      "path": "README.md",
+      "role": "support",
+      "exists": true,
+      "bytes": 11417,
+      "line_count": 322,
+      "sha256": "654842924c9b5baea87fb8f00588ef7bb5de956c7c545b1f57f45d78189ac732"
+    },
+    {
+      "path": "requirements.txt",
+      "role": "support",
+      "exists": true,
+      "bytes": 69,
+      "line_count": 4,
+      "sha256": "50eaf6364bb902e87f96cd3236ab4561edf72392260400ef9a4369bdca29a41b"
+    }
+  ]
+}

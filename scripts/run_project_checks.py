@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import py_compile
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 from check_environment import REQUIRED_PACKAGES, package_status  # noqa: E402
 from config_utils import load_config, project_path, repo_path  # noqa: E402
 from evaluate_training_corpus import build_metrics  # noqa: E402
+from generate_corpus_manifest import build_manifest  # noqa: E402
 
 
 def print_step(name: str) -> None:
@@ -50,7 +52,8 @@ def iter_project_text_files() -> list[Path]:
             check=True,
         )
         candidates = [ROOT / line.strip() for line in result.stdout.splitlines() if line.strip()]
-    except Exception:
+    except Exception as exc:  # noqa: BLE001 - fallback keeps local verification usable outside git
+        print(f"git file listing unavailable, using fallback scan: {exc}")
         candidates = [path for path in ROOT.rglob("*") if path.is_file()]
 
     files: list[Path] = []
@@ -59,7 +62,7 @@ def iter_project_text_files() -> list[Path]:
             continue
         if any(part in SKIP_DIRS for part in path.relative_to(ROOT).parts):
             continue
-        if path.suffix.lower() in TEXT_EXTENSIONS:
+        if path.suffix.lower() in TEXT_EXTENSIONS or path.name in TEXT_FILE_ALLOWLIST:
             files.append(path)
     return sorted(files)
 
@@ -78,7 +81,6 @@ def scan_forbidden_patterns(patterns: list[str]) -> list[dict[str, Any]]:
     return findings
 
 
-
 def scan_sensitive_patterns() -> list[dict[str, Any]]:
     findings = []
     for path in iter_project_text_files():
@@ -91,6 +93,8 @@ def scan_sensitive_patterns() -> list[dict[str, Any]]:
                 for match in pattern.finditer(line):
                     findings.append({"file": repo_path(path), "line": line_no, "pattern": pattern.pattern, "match_prefix": match.group(0)[:6]})
     return findings
+
+
 def compile_scripts() -> list[dict[str, Any]]:
     compiled = []
     for path in sorted(SCRIPTS_DIR.glob("*.py")):
@@ -102,7 +106,8 @@ def compile_scripts() -> list[dict[str, Any]]:
 def check_required_files(config: dict[str, Any]) -> list[dict[str, Any]]:
     checks = []
     corpus_dir = project_path(config["corpus"]["default_dir"])
-    checks.append({"path": repo_path(project_path(config["corpus"]["source_file"])), "exists": project_path(config["corpus"]["source_file"]).exists()})
+    source_file = project_path(config["corpus"]["source_file"])
+    checks.append({"path": repo_path(source_file), "exists": source_file.exists()})
     for file_name in config["corpus"]["files"].values():
         path = corpus_dir / file_name
         checks.append({"path": repo_path(path), "exists": path.exists()})
@@ -114,6 +119,29 @@ def check_required_files(config: dict[str, Any]) -> list[dict[str, Any]]:
     if missing:
         raise RuntimeError(f"Required files missing: {missing}")
     return checks
+
+
+def comparable_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "manifest_version": manifest.get("manifest_version"),
+        "config_file": manifest.get("config_file"),
+        "project_root_name": manifest.get("project_root_name"),
+        "file_count": manifest.get("file_count"),
+        "missing_count": manifest.get("missing_count"),
+        "missing_files": manifest.get("missing_files"),
+        "files": sorted(manifest.get("files", []), key=lambda item: item.get("path", "")),
+    }
+
+
+def check_manifest(config: dict[str, Any]) -> dict[str, Any]:
+    corpus_dir = project_path(config["corpus"]["default_dir"])
+    manifest_path = corpus_dir / config["corpus"]["files"].get("manifest", "corpus_manifest.json")
+    stored = json.loads(manifest_path.read_text(encoding="utf-8"))
+    current = build_manifest(config)
+    matches = comparable_manifest(stored) == comparable_manifest(current)
+    if not matches:
+        raise RuntimeError("Corpus manifest is stale. Run: python scripts/generate_corpus_manifest.py")
+    return {"path": repo_path(manifest_path), "status": "ok", "file_count": stored.get("file_count")}
 
 
 def main() -> None:
@@ -148,6 +176,10 @@ def main() -> None:
     print(json.dumps(metrics["summary"], ensure_ascii=False, indent=2))
     if metrics["summary"]["hard_failure_count"]:
         raise RuntimeError("Corpus quality gate failed.")
+
+    print_step("Corpus Manifest")
+    manifest_result = check_manifest(config)
+    print(f"{manifest_result['path']}: {manifest_result['status']} file_count={manifest_result['file_count']}")
 
     print_step("Sensitive And Scope Scan")
     sensitive_findings = scan_sensitive_patterns()
