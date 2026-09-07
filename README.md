@@ -14,20 +14,36 @@
 核心 Python 依赖：
 
 - `open-dataflow`
+- `pandas`
+- `requests`
+- `simhash`
 
 建议使用虚拟环境：
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
-pip install open-dataflow
+python -m pip install -r requirements.txt
+```
+
+安装完成后建议先运行环境检查：
+
+```powershell
+python scripts/check_environment.py
+```
+
+如果系统默认 `python` 指向了其他解释器，建议显式使用虚拟环境中的 Python：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_environment.py
 ```
 
 如果运行公开数据源抓取脚本，需要能访问 CISA、NVD、FIRST EPSS、GitHub、UNB、UNSW 等公开网站。
 
 ## 2. 仓库内容
 
-- `scripts/`：可复现实验脚本，包括基础案例实验、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
+- `scripts/`：可复现实验脚本，包括基础案例实验、环境检查、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
+- `requirements.txt`：项目核心 Python 依赖清单。
 - `source_sample_corpus/`：从公开网络安全数据源汇总得到的样例来源语料。
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
 - `experiments/`：DataFlow 基础案例实验的输入与输出文件。
