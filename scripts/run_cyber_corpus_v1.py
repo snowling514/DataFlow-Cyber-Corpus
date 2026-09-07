@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import math
@@ -357,9 +357,9 @@ def write_reports(raw_eval: dict[str, Any], v1_eval: dict[str, Any], v1_df: pd.D
         "八、后续优化方向",
         "----------------",
         "1. 增加漏洞类型、攻击阶段、资产类型等标签字段。",
-        "2. 使用 DeepSeek 或其他模型生成问答对、摘要和解释数据。",
+        "2. 使用 DeepSeek 生成问答对、摘要和解释数据，并保留来源约束。",
         "3. 加入人工抽样检查，统计术语保真度和事实准确率。",
-        "4. 建立 train/dev/test 划分，为小模型微调实验做准备。",
+        "4. 建立数据版本划分、抽检集合和质量复核流程，为后续语料迭代做准备。",
         "5. 在 V2 阶段引入真实 CVE/NVD 数据或课程指定数据集。",
         "",
     ])

@@ -1,6 +1,6 @@
-﻿# DataFlow 网络安全语料构建实验
+# DataFlow 网络安全语料构建实验
 
-本仓库用于保存基于 DataFlow 的网络安全语料构建实验代码与样例数据。项目目标是从公开安全数据源中整理原始漏洞/安全数据，经过清洗、过滤、去重和格式转换，生成更接近大语言模型训练所需的 QA 与 SFT 格式语料。
+本仓库用于保存基于 DataFlow 的网络安全语料构建实验代码与样例数据。项目目标是从公开安全数据源中整理原始漏洞/安全数据，经过清洗、过滤、去重和格式转换，生成更接近大语言模型训练所需的 QA 与 SFT 指令格式语料。
 
 ## 1. 环境依赖
 
@@ -27,7 +27,7 @@ pip install open-dataflow
 
 ## 2. 仓库内容
 
-- `scripts/`：可复现实验脚本，包括基础案例实验、公开数据源抓取、语料 V1 构建、新内容处理等。
+- `scripts/`：可复现实验脚本，包括基础案例实验、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
 - `source_sample_corpus/`：从公开网络安全数据源汇总得到的样例来源语料。
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
 - `experiments/`：DataFlow 基础案例实验的输入与输出文件。
@@ -52,7 +52,7 @@ pip install open-dataflow
 
 - `cyber_corpus_v1_raw_sources.jsonl`：保留公开来源字段和原始摘要，便于追溯。
 - `cyber_corpus_v1_qa.jsonl`：问答格式样本，适合问答训练或检索问答评估。
-- `cyber_corpus_v1_sft.jsonl`：指令微调格式样本，包含 `instruction`、`input`、`output` 字段。
+- `cyber_corpus_v1_sft.jsonl`：SFT 指令格式样本，包含 `instruction`、`input`、`output` 字段。
 
 当前 V1 样本规模较小，主要用于验证 DataFlow 流水线和语料构建流程，不适合作为完整模型训练数据集。
 
@@ -83,7 +83,7 @@ python scripts/fetch_source_sample_corpus.py
 
 预期结果：生成包含漏洞记录和数据集说明记录的样例来源语料。
 
-### 6.2 构建 V1 QA/SFT 训练语料
+### 6.2 构建 V1 QA/SFT 指令格式语料
 
 ```powershell
 python scripts/build_training_corpus_v1.py
@@ -188,6 +188,25 @@ results/<运行时间>/
 
 预期结果：输入新的网络安全文本后，脚本会导出清洗后的记录，并通过 DeepSeek 自动生成 QA 与 SFT 样本，便于后续人工检查或追加到语料库。
 
+
+### 6.5 评估 V1 QA/SFT 语料质量
+
+```powershell
+python scripts/evaluate_training_corpus.py
+```
+
+输入：
+
+- `cyber_training_corpus_v1/cyber_corpus_v1_raw_sources.jsonl`
+- `cyber_training_corpus_v1/cyber_corpus_v1_qa.jsonl`
+- `cyber_training_corpus_v1/cyber_corpus_v1_sft.jsonl`
+
+输出：
+
+- `cyber_training_corpus_v1/quality_metrics.json`
+
+预期结果：生成字段完整性、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
+
 ## 7. 新内容处理流程
 
 `process_new_content.py` 的内部流程如下：
@@ -202,6 +221,7 @@ results/<运行时间>/
   -> UniqueWordsFilter
   -> SimHashDeduplicateFilter
   -> 关键词命中统计
+  -> DeepSeek 生成 QA/SFT 样本
   -> 导出 processed / QA / SFT / summary
 ```
 
@@ -214,8 +234,9 @@ results/<运行时间>/
   -> 来源样例语料汇总
   -> DataFlow 清洗与过滤
   -> 字段标准化与去重
-  -> QA / SFT 格式转换
+  -> DeepSeek QA / SFT 格式生成
   -> V1 语料与初步质量评估
+  -> 流水线指标复核与迭代优化
 ```
 
 ## 9. 预期结果
@@ -224,9 +245,9 @@ results/<运行时间>/
 
 1. 可追溯的公开安全来源样例语料。
 2. QA 问答格式训练样本。
-3. SFT 指令微调格式训练样本。
+3. SFT 指令格式训练样本。
 4. 针对用户新输入文本的处理结果。
-5. 可复现的 DataFlow 清洗、过滤、去重流程。
+5. 可复现的 DataFlow 清洗、过滤、去重和质量评估流程。
 
 ## 10. 后续方向
 
@@ -234,5 +255,5 @@ results/<运行时间>/
 - 引入人工抽检，评估事实一致性、答案完整性和幻觉风险。
 - 持续使用 DeepSeek 进行问题多样化、SFT 合成和答案表达优化，但答案事实仍由结构化字段或输入文本约束。
 - 增加日志解释、IOC 提取、风险排序和处置步骤生成等任务类型。
-- 拆分 train/dev/test，为后续小模型微调实验做准备。
+- 设计数据版本划分、抽检集合和质量复核流程，为后续语料迭代做准备。
 

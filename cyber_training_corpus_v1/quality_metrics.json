@@ -1,0 +1,214 @@
+{
+  "generated_at": "2026-09-07T11:05:52",
+  "corpus_dir": "cyber_training_corpus_v1",
+  "files": {
+    "raw_sources": "cyber_training_corpus_v1/cyber_corpus_v1_raw_sources.jsonl",
+    "qa": "cyber_training_corpus_v1/cyber_corpus_v1_qa.jsonl",
+    "sft": "cyber_training_corpus_v1/cyber_corpus_v1_sft.jsonl"
+  },
+  "reports": {
+    "raw_sources": {
+      "name": "raw_sources",
+      "count": 10,
+      "ids": {
+        "id_field": "record_id",
+        "missing_id_count": 0,
+        "unique_id_count": 10,
+        "duplicate_id_count": 0,
+        "duplicate_ids": []
+      },
+      "required_fields": {
+        "required_fields": [
+          "record_id",
+          "record_type",
+          "title",
+          "text"
+        ],
+        "missing_counts": {},
+        "complete_count": 10,
+        "complete_ratio": 1.0
+      },
+      "length": {
+        "min_chars": 866,
+        "max_chars": 1656,
+        "avg_chars": 1173.8,
+        "too_short_count": 0,
+        "too_long_count": 0
+      },
+      "task_type_counts": {
+        "unknown": 10
+      },
+      "generation_model_counts": {
+        "not_recorded": 10
+      },
+      "cybersecurity_coverage": {
+        "covered_row_count": 10,
+        "covered_ratio": 1.0,
+        "cve_mention_count": 8,
+        "top_terms": {
+          "rce": 10,
+          "exploit": 9,
+          "cve": 8,
+          "epss": 8,
+          "vulnerability": 8,
+          "mitigation": 8,
+          "attack": 8,
+          "privilege": 2,
+          "authentication": 1,
+          "cvss": 1,
+          "remote code execution": 1
+        }
+      }
+    },
+    "qa": {
+      "name": "qa",
+      "count": 44,
+      "ids": {
+        "id_field": "id",
+        "missing_id_count": 0,
+        "unique_id_count": 44,
+        "duplicate_id_count": 0,
+        "duplicate_ids": []
+      },
+      "required_fields": {
+        "required_fields": [
+          "id",
+          "record_id",
+          "task_type",
+          "question",
+          "answer"
+        ],
+        "missing_counts": {},
+        "complete_count": 44,
+        "complete_ratio": 1.0
+      },
+      "length": {
+        "min_chars": 59,
+        "max_chars": 807,
+        "avg_chars": 223.39,
+        "too_short_count": 0,
+        "too_long_count": 0
+      },
+      "task_type_counts": {
+        "vulnerability_summary": 8,
+        "affected_product": 8,
+        "risk_assessment": 8,
+        "mitigation": 8,
+        "weakness_extraction": 8,
+        "dataset_description": 2,
+        "dataset_use": 2
+      },
+      "generation_model_counts": {
+        "not_recorded": 44
+      },
+      "cybersecurity_coverage": {
+        "covered_row_count": 42,
+        "covered_ratio": 0.9545,
+        "cve_mention_count": 40,
+        "top_terms": {
+          "cve": 40,
+          "漏洞": 16,
+          "cvss": 9,
+          "vulnerability": 8,
+          "epss": 8,
+          "风险": 8,
+          "mitigation": 8,
+          "修复": 8,
+          "处置": 8,
+          "cwe": 8,
+          "exploit": 6,
+          "attack": 6,
+          "privilege": 2,
+          "rce": 2,
+          "authentication": 1,
+          "remote code execution": 1
+        }
+      },
+      "record_links": {
+        "missing_record_id_count": 0,
+        "invalid_record_id_count": 0,
+        "invalid_record_ids": [],
+        "source_ref_count": 44,
+        "source_ref_ratio": 1.0
+      }
+    },
+    "sft": {
+      "name": "sft",
+      "count": 26,
+      "ids": {
+        "id_field": "id",
+        "missing_id_count": 0,
+        "unique_id_count": 26,
+        "duplicate_id_count": 0,
+        "duplicate_ids": []
+      },
+      "required_fields": {
+        "required_fields": [
+          "id",
+          "record_id",
+          "task_type",
+          "instruction",
+          "input",
+          "output"
+        ],
+        "missing_counts": {},
+        "complete_count": 26,
+        "complete_ratio": 1.0
+      },
+      "length": {
+        "min_chars": 1189,
+        "max_chars": 3401,
+        "avg_chars": 1948.04,
+        "too_short_count": 0,
+        "too_long_count": 0
+      },
+      "task_type_counts": {
+        "summarize_vulnerability": 8,
+        "recommend_mitigation": 8,
+        "extract_structured_fields": 8,
+        "dataset_to_training_plan": 2
+      },
+      "generation_model_counts": {
+        "not_recorded": 26
+      },
+      "cybersecurity_coverage": {
+        "covered_row_count": 26,
+        "covered_ratio": 1.0,
+        "cve_mention_count": 24,
+        "top_terms": {
+          "rce": 26,
+          "cve": 24,
+          "cwe": 24,
+          "cvss": 24,
+          "epss": 24,
+          "vulnerability": 24,
+          "ransomware": 24,
+          "mitigation": 24,
+          "漏洞": 24,
+          "exploit": 21,
+          "attack": 20,
+          "处置": 10,
+          "修复": 8,
+          "privilege": 6,
+          "authentication": 3,
+          "remote code execution": 3,
+          "攻击": 2
+        }
+      },
+      "record_links": {
+        "missing_record_id_count": 0,
+        "invalid_record_id_count": 0,
+        "invalid_record_ids": [],
+        "source_ref_count": 26,
+        "source_ref_ratio": 1.0
+      }
+    }
+  },
+  "summary": {
+    "raw_source_count": 10,
+    "qa_count": 44,
+    "sft_count": 26,
+    "hard_failure_count": 0,
+    "hard_failures": []
+  }
+}
