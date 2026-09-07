@@ -1,6 +1,7 @@
 {
-  "generated_at": "2026-09-07T11:05:52",
+  "generated_at": "2026-09-07T11:17:36",
   "corpus_dir": "cyber_training_corpus_v1",
+  "schema_dir": "schemas",
   "files": {
     "raw_sources": "cyber_training_corpus_v1/cyber_corpus_v1_raw_sources.jsonl",
     "qa": "cyber_training_corpus_v1/cyber_corpus_v1_qa.jsonl",
@@ -16,6 +17,16 @@
         "unique_id_count": 10,
         "duplicate_id_count": 0,
         "duplicate_ids": []
+      },
+      "schema_validation": {
+        "schema": "cyber_raw_source",
+        "schema_version": "1.0",
+        "schema_file": "schemas/cyber_raw_source.schema.json",
+        "missing_required_counts": {},
+        "type_mismatch_counts": {},
+        "unexpected_field_counts": {},
+        "valid_row_count": 10,
+        "valid_ratio": 1.0
       },
       "required_fields": {
         "required_fields": [
@@ -69,6 +80,16 @@
         "unique_id_count": 44,
         "duplicate_id_count": 0,
         "duplicate_ids": []
+      },
+      "schema_validation": {
+        "schema": "cyber_qa",
+        "schema_version": "1.0",
+        "schema_file": "schemas/cyber_qa.schema.json",
+        "missing_required_counts": {},
+        "type_mismatch_counts": {},
+        "unexpected_field_counts": {},
+        "valid_row_count": 44,
+        "valid_ratio": 1.0
       },
       "required_fields": {
         "required_fields": [
@@ -141,6 +162,16 @@
         "unique_id_count": 26,
         "duplicate_id_count": 0,
         "duplicate_ids": []
+      },
+      "schema_validation": {
+        "schema": "cyber_sft",
+        "schema_version": "1.0",
+        "schema_file": "schemas/cyber_sft.schema.json",
+        "missing_required_counts": {},
+        "type_mismatch_counts": {},
+        "unexpected_field_counts": {},
+        "valid_row_count": 26,
+        "valid_ratio": 1.0
       },
       "required_fields": {
         "required_fields": [

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "name": "cyber_qa",
+  "description": "网络安全 QA 问答语料。每条样本应能追溯到一条来源记录。",
+  "fields": {
+    "id": {"type": "string", "required": true, "description": "QA 样本唯一 ID。"},
+    "record_id": {"type": "string", "required": true, "description": "关联的来源记录 ID。"},
+    "task_type": {"type": "string", "required": true, "description": "问答任务类型。"},
+    "question": {"type": "string", "required": true, "description": "问题文本。"},
+    "answer": {"type": "string", "required": true, "description": "答案文本。"},
+    "source_refs": {"type": "object", "required": true, "description": "答案依据的来源链接或来源 ID。"},
+    "generation_model": {"type": "string", "required": false, "description": "生成模型名称，如 deepseek-chat。"},
+    "corpus_version": {"type": "string", "required": true, "description": "语料版本标记。"}
+  }
+}

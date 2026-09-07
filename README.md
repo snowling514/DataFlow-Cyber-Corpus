@@ -44,6 +44,7 @@ python scripts/check_environment.py
 
 - `scripts/`：可复现实验脚本，包括基础案例实验、环境检查、公开数据源抓取、语料 V1 构建、新内容处理、质量评估等。
 - `requirements.txt`：项目核心 Python 依赖清单。
+- `schemas/`：语料字段规范，分别约束来源记录、QA 样本和 SFT 指令格式样本。
 - `source_sample_corpus/`：从公开网络安全数据源汇总得到的样例来源语料。
 - `cyber_training_corpus_v1/`：转换后的 V1 训练语料，包括原始来源记录、QA 问答语料和 SFT 指令语料。
 - `experiments/`：DataFlow 基础案例实验的输入与输出文件。
@@ -64,11 +65,11 @@ python scripts/check_environment.py
 
 ## 4. 语料格式
 
-本项目生成三类主要训练语料：
+本项目生成三类主要训练语料，并在 `schemas/` 下提供对应字段规范：
 
-- `cyber_corpus_v1_raw_sources.jsonl`：保留公开来源字段和原始摘要，便于追溯。
-- `cyber_corpus_v1_qa.jsonl`：问答格式样本，适合问答训练或检索问答评估。
-- `cyber_corpus_v1_sft.jsonl`：SFT 指令格式样本，包含 `instruction`、`input`、`output` 字段。
+- `cyber_corpus_v1_raw_sources.jsonl`：保留公开来源字段和原始摘要，便于追溯；对应 `schemas/cyber_raw_source.schema.json`。
+- `cyber_corpus_v1_qa.jsonl`：问答格式样本，适合问答训练或检索问答评估；对应 `schemas/cyber_qa.schema.json`。
+- `cyber_corpus_v1_sft.jsonl`：SFT 指令格式样本，包含 `instruction`、`input`、`output` 字段；对应 `schemas/cyber_sft.schema.json`。
 
 当前 V1 样本规模较小，主要用于验证 DataFlow 流水线和语料构建流程，不适合作为完整模型训练数据集。
 
@@ -221,7 +222,7 @@ python scripts/evaluate_training_corpus.py
 
 - `cyber_training_corpus_v1/quality_metrics.json`
 
-预期结果：生成字段完整性、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
+预期结果：生成字段完整性、schema 类型校验、唯一 ID、任务类型分布、来源追溯、领域术语覆盖和记录链接关系等质量指标，用于复核语料流水线效果。
 
 ## 7. 新内容处理流程
 

@@ -10,11 +10,23 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CORPUS_DIR = ROOT / "cyber_training_corpus_v1"
+SCHEMA_DIR = ROOT / "schemas"
 
 RAW_FILE = "cyber_corpus_v1_raw_sources.jsonl"
 QA_FILE = "cyber_corpus_v1_qa.jsonl"
 SFT_FILE = "cyber_corpus_v1_sft.jsonl"
 DEFAULT_OUTPUT = "quality_metrics.json"
+
+SCHEMA_FILES = {
+    "raw_sources": "cyber_raw_source.schema.json",
+    "qa": "cyber_qa.schema.json",
+    "sft": "cyber_sft.schema.json",
+}
+SCHEMA_NAME_TO_FILE = {
+    "cyber_raw_source": "cyber_raw_source.schema.json",
+    "cyber_qa": "cyber_qa.schema.json",
+    "cyber_sft": "cyber_sft.schema.json",
+}
 
 CVE_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}", flags=re.I)
 CYBER_TERMS = [
@@ -66,12 +78,17 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-
 def repo_path(path: Path) -> str:
     try:
         return path.resolve().relative_to(ROOT.resolve()).as_posix()
     except ValueError:
         return str(path)
+
+
+def load_schema(name: str) -> dict[str, Any]:
+    path = SCHEMA_DIR / SCHEMA_FILES[name]
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 def clean_text(value: Any) -> str:
     return "" if value is None else re.sub(r"\s+", " ", str(value)).strip()
@@ -81,20 +98,96 @@ def text_for_row(row: dict[str, Any], fields: list[str]) -> str:
     return " ".join(clean_text(row.get(field)) for field in fields)
 
 
+def matches_type(value: Any, expected_type: str, item_type: str | None = None) -> bool:
+    if expected_type == "string":
+        return isinstance(value, str)
+    if expected_type == "object":
+        return isinstance(value, dict)
+    if expected_type == "array":
+        if not isinstance(value, list):
+            return False
+        if item_type == "string":
+            return all(isinstance(item, str) for item in value)
+        return True
+    if expected_type == "number":
+        return isinstance(value, int | float) and not isinstance(value, bool)
+    if expected_type == "boolean":
+        return isinstance(value, bool)
+    return True
+
+
+def schema_validation_report(rows: list[dict[str, Any]], schema: dict[str, Any]) -> dict[str, Any]:
+    fields = schema.get("fields", {})
+    missing_required = Counter()
+    type_mismatches = Counter()
+    unexpected_fields = Counter()
+
+    allowed_fields = set(fields)
+    for row in rows:
+        for field, spec in fields.items():
+            value = row.get(field)
+            if spec.get("required") and (field not in row or clean_text(value) == ""):
+                missing_required[field] += 1
+                continue
+            if field in row and value is not None and not matches_type(value, spec.get("type", "any"), spec.get("items")):
+                type_mismatches[field] += 1
+        unexpected_fields.update(field for field in row if field not in allowed_fields)
+
+    return {
+        "schema": schema.get("name"),
+        "schema_version": schema.get("schema_version"),
+        "schema_file": repo_path(SCHEMA_DIR / SCHEMA_NAME_TO_FILE[schema["name"]]),
+        "missing_required_counts": dict(missing_required),
+        "type_mismatch_counts": dict(type_mismatches),
+        "unexpected_field_counts": dict(unexpected_fields),
+        "valid_row_count": len(rows) - sum(
+            1
+            for row in rows
+            if any(spec.get("required") and clean_text(row.get(field)) == "" for field, spec in fields.items())
+            or any(
+                field in row
+                and row.get(field) is not None
+                and not matches_type(row.get(field), spec.get("type", "any"), spec.get("items"))
+                for field, spec in fields.items()
+            )
+        ),
+        "valid_ratio": round(
+            (
+                len(rows)
+                - sum(
+                    1
+                    for row in rows
+                    if any(spec.get("required") and clean_text(row.get(field)) == "" for field, spec in fields.items())
+                    or any(
+                        field in row
+                        and row.get(field) is not None
+                        and not matches_type(row.get(field), spec.get("type", "any"), spec.get("items"))
+                        for field, spec in fields.items()
+                    )
+                )
+            )
+            / len(rows),
+            4,
+        ) if rows else 0,
+    }
+
+
 def required_field_report(rows: list[dict[str, Any]], fields: list[str]) -> dict[str, Any]:
     missing = Counter()
+    incomplete_rows = 0
     for row in rows:
+        row_incomplete = False
         for field in fields:
             if not clean_text(row.get(field)):
                 missing[field] += 1
+                row_incomplete = True
+        if row_incomplete:
+            incomplete_rows += 1
     return {
         "required_fields": fields,
         "missing_counts": dict(missing),
-        "complete_count": len(rows) - sum(1 for row in rows if any(not clean_text(row.get(field)) for field in fields)),
-        "complete_ratio": round(
-            (len(rows) - sum(1 for row in rows if any(not clean_text(row.get(field)) for field in fields))) / len(rows),
-            4,
-        ) if rows else 0,
+        "complete_count": len(rows) - incomplete_rows,
+        "complete_ratio": round((len(rows) - incomplete_rows) / len(rows), 4) if rows else 0,
     }
 
 
@@ -165,11 +258,18 @@ def record_link_report(rows: list[dict[str, Any]], valid_record_ids: set[str]) -
     }
 
 
-def corpus_report(name: str, rows: list[dict[str, Any]], required_fields: list[str], text_fields: list[str]) -> dict[str, Any]:
+def corpus_report(
+    name: str,
+    rows: list[dict[str, Any]],
+    required_fields: list[str],
+    text_fields: list[str],
+    schema: dict[str, Any],
+) -> dict[str, Any]:
     return {
         "name": name,
         "count": len(rows),
         "ids": id_report(rows),
+        "schema_validation": schema_validation_report(rows, schema),
         "required_fields": required_field_report(rows, required_fields),
         "length": length_report(rows, text_fields),
         "task_type_counts": dict(Counter(clean_text(row.get("task_type") or "unknown") for row in rows)),
@@ -184,9 +284,13 @@ def build_metrics(corpus_dir: Path) -> dict[str, Any]:
     sft_rows = read_jsonl(corpus_dir / SFT_FILE)
     valid_record_ids = {clean_text(row.get("record_id")) for row in raw_rows if clean_text(row.get("record_id"))}
 
-    qa_report = corpus_report("qa", qa_rows, ["id", "record_id", "task_type", "question", "answer"], ["question", "answer"])
-    sft_report = corpus_report("sft", sft_rows, ["id", "record_id", "task_type", "instruction", "input", "output"], ["instruction", "input", "output"])
-    raw_report = corpus_report("raw_sources", raw_rows, ["record_id", "record_type", "title", "text"], ["title", "text"])
+    raw_schema = load_schema("raw_sources")
+    qa_schema = load_schema("qa")
+    sft_schema = load_schema("sft")
+
+    qa_report = corpus_report("qa", qa_rows, ["id", "record_id", "task_type", "question", "answer"], ["question", "answer"], qa_schema)
+    sft_report = corpus_report("sft", sft_rows, ["id", "record_id", "task_type", "instruction", "input", "output"], ["instruction", "input", "output"], sft_schema)
+    raw_report = corpus_report("raw_sources", raw_rows, ["record_id", "record_type", "title", "text"], ["title", "text"], raw_schema)
     raw_report["ids"] = id_report(raw_rows, "record_id")
 
     qa_report["record_links"] = record_link_report(qa_rows, valid_record_ids)
@@ -198,6 +302,8 @@ def build_metrics(corpus_dir: Path) -> dict[str, Any]:
             hard_failures.append(f"{section['name']}: id missing or duplicate")
         if section["required_fields"]["complete_ratio"] < 1:
             hard_failures.append(f"{section['name']}: required fields incomplete")
+        if section["schema_validation"]["missing_required_counts"] or section["schema_validation"]["type_mismatch_counts"]:
+            hard_failures.append(f"{section['name']}: schema validation failed")
         if section["cybersecurity_coverage"]["covered_ratio"] < 0.8:
             hard_failures.append(f"{section['name']}: cybersecurity term coverage below 0.8")
     for section in [qa_report, sft_report]:
@@ -209,6 +315,7 @@ def build_metrics(corpus_dir: Path) -> dict[str, Any]:
     return {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "corpus_dir": repo_path(corpus_dir),
+        "schema_dir": repo_path(SCHEMA_DIR),
         "files": {
             "raw_sources": repo_path(corpus_dir / RAW_FILE),
             "qa": repo_path(corpus_dir / QA_FILE),

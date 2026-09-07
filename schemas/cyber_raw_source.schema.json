@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "name": "cyber_raw_source",
+  "description": "网络安全来源记录。保留公开数据源字段、来源链接和基础追溯信息。",
+  "fields": {
+    "record_id": {"type": "string", "required": true, "description": "来源记录在本项目中的唯一 ID。"},
+    "record_type": {"type": "string", "required": true, "description": "记录类型，例如 vulnerability_text 或 dataset_description。"},
+    "title": {"type": "string", "required": true, "description": "来源记录标题。"},
+    "text": {"type": "string", "required": true, "description": "规范化后的主要文本内容。"},
+    "primary_source": {"type": "string", "required": false, "description": "主要来源名称。"},
+    "source_urls": {"type": "object", "required": false, "description": "来源链接集合。"},
+    "cve_id": {"type": "string", "required": false, "description": "漏洞记录对应的 CVE 编号。"},
+    "tags": {"type": "array", "required": false, "items": "string", "description": "来源记录标签。"},
+    "corpus_version": {"type": "string", "required": true, "description": "语料版本标记。"}
+  }
+}

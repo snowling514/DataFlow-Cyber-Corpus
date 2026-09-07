@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "name": "cyber_sft",
+  "description": "网络安全 SFT 指令格式语料。每条样本包含 instruction、input 和 output。",
+  "fields": {
+    "id": {"type": "string", "required": true, "description": "SFT 样本唯一 ID。"},
+    "record_id": {"type": "string", "required": true, "description": "关联的来源记录 ID。"},
+    "task_type": {"type": "string", "required": true, "description": "指令任务类型。"},
+    "instruction": {"type": "string", "required": true, "description": "指令文本。"},
+    "input": {"type": "string", "required": true, "description": "模型输入文本。"},
+    "output": {"type": "string", "required": true, "description": "期望输出文本。"},
+    "source_refs": {"type": "object", "required": true, "description": "输出依据的来源链接或来源 ID。"},
+    "generation_model": {"type": "string", "required": false, "description": "生成模型名称，如 deepseek-chat。"},
+    "corpus_version": {"type": "string", "required": true, "description": "语料版本标记。"}
+  }
+}
